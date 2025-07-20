@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator</title>
+    <link rel="stylesheet" href="cal1.css">
+</head>
+<body>
+    <div class="calculator">
+        <input type="text" class="hover-text" placeholder="0" id="display" readonly>
+        <div>
+            <button class="op" onclick="clearDisplay()">AC</button>
+            <button class="op" onclick="deleteLastChar()">DEL</button>
+            <button class="op" onclick="appendToDisplay('%')">%</button>
+            <button class="op" onclick="appendToDisplay('/')">/</button>
+        </div>
+        <div>
+            <button onclick="appendToDisplay('7')">7</button>
+            <button onclick="appendToDisplay('8')">8</button>
+            <button onclick="appendToDisplay('9')">9</button>
+            <button class="op" onclick="appendToDisplay('*')">*</button>
+        </div>
+        <div>
+            <button onclick="appendToDisplay('4')">4</button>
+            <button onclick="appendToDisplay('5')">5</button>
+            <button onclick="appendToDisplay('6')">6</button>
+            <button class="op" onclick="appendToDisplay('-')">-</button>
+        </div>
+        <div>
+            <button onclick="appendToDisplay('1')">1</button>
+            <button onclick="appendToDisplay('2')">2</button>
+            <button onclick="appendToDisplay('3')">3</button>
+            <button class="op" onclick="appendToDisplay('+')">+</button>
+        </div>
+        <div>
+            <button onclick="appendToDisplay('00')">00</button>
+            <button onclick="appendToDisplay('0')">0</button>
+            <button onclick="appendToDisplay('.')">.</button>
+            <button class="equal" onclick="calculateResult()">=</button>
+        </div>
+    </div>
+    <script language="javascript" type="text/javascript">
+        let display = document.getElementById('display');
+        let currentInput = "";
+        const operators = ['+', '-', '*', '/', '%'];
+
+        function appendToDisplay(value) {
+            // Prevent leading operators (except for a negative sign)
+            if (currentInput === "" && operators.includes(value) && value !== '-') {
+                return; // Don't allow operators at the very beginning (except minus for negative numbers)
+            }
+
+            // Prevent multiple decimal points in a single number
+            // This is a more robust check: look at the last number segment
+            if (value === '.') {
+                const lastNumMatch = currentInput.match(/(\d+\.?\d*)$/); // Matches the last number (optional decimal)
+                if (lastNumMatch && lastNumMatch[0].includes('.')) {
+                    return; // Prevent adding another dot if the last number already has one
+                }
+            }
+
+            // Prevent consecutive operators (e.g., '5++') except for negative numbers (e.g., '5*-2')
+            const lastChar = currentInput.slice(-1);
+            if (operators.includes(value) && operators.includes(lastChar)) {
+                 // Allow chaining for negative numbers like '5* -2'
+                if ((value === '-' && lastChar !== '-') || (value !== '-' && lastChar !== '-')) {
+                    // Replace the last operator with the new one
+                    currentInput = currentInput.slice(0, -1) + value;
+                    display.value = currentInput;
+                    return;
+                } else if (value === '-' && lastChar === '-') {
+                    // Prevent '5--'
+                    return;
+                }
+            }
+
+
+            currentInput += value;
+            display.value = currentInput;
+        }
+
+        function clearDisplay() {
+            currentInput = "";
+            display.value = "";
+        }
+
+        function deleteLastChar() {
+            currentInput = currentInput.slice(0, -1);
+            display.value = currentInput === "" ? "0" : currentInput; // Show "0" if empty
+        }
+
+        function calculateResult() {
+            // Do not attempt to evaluate if the input is empty or ends with an operator
+            if (currentInput === "" || operators.includes(currentInput.slice(-1))) {
+                display.value = "Error"; // Or simply do nothing, or show previous result
+                currentInput = ""; // Clear input after error
+                return;
+            }
+
+            try {
+                // Ensure the percentage operator is handled before eval
+                // This is a very basic percentage handling (e.g., 50% will be 0.5)
+                // For "50 + 10%", you'd need more complex parsing.
+                let expression = currentInput.replace(/%/g, '/100');
+
+                // Using eval() can still be risky for untrusted input.
+                // For a simple calculator, it's generally okay, but be aware.
+                let result = eval(expression);
+
+                
+                if (Number.isFinite(result) && Math.abs(result) < 1e-9 && result !== 0) {
+          
+                     result = parseFloat(result.toFixed(10)); 
+                }
+
+
+                currentInput = result.toString();
+                display.value = currentInput;
+            } catch (error) {
+                display.value = "Error";
+                currentInput = ""; 
+            }
+        }
+
+        
+    </script>
+</body>
+</html>
